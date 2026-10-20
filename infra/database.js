@@ -1,4 +1,6 @@
 import { Client } from "pg";
+import fs from "fs";
+import path from "path";
 
 async function query(queryObject) {
   let client;
@@ -34,9 +36,21 @@ export default {
 };
 
 function getSSLValues() {
+  console.log(process.env.POSTGRES_CA);
+
   if (process.env.POSTGRES_CA) {
+    let caValue = process.env.POSTGRES_CA;
+
+    // Se a variável for um caminho de arquivo (começa com . ou /)
+    if (caValue.startsWith("./") || caValue.startsWith("/")) {
+      // Resolve o caminho absoluto a partir da raiz do projeto
+      const absolutePath = path.resolve(process.cwd(), caValue);
+      caValue = fs.readFileSync(absolutePath, "utf-8");
+    }
+
     return {
-      ca: process.env.POSTGRES_CA,
+      rejectUnauthorized: true,
+      ca: caValue,
     };
   }
 
